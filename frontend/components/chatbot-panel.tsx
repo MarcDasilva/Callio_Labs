@@ -20,7 +20,7 @@ const MODELS = [
 
 type ModelId = (typeof MODELS)[number]["id"];
 
-export function ChatbotPanel() {
+export function ChatbotPanel({ onSend }: { onSend?: () => void }) {
   const [selectedModel, setSelectedModel] = useState<ModelId>("claude");
   const [input, setInput] = useState("");
 
@@ -29,7 +29,7 @@ export function ChatbotPanel() {
     const text = input.trim();
     if (!text) return;
     setInput("");
-    // Placeholder: could send to API here
+    onSend?.();
   };
 
   return (
@@ -62,19 +62,26 @@ export function ChatbotPanel() {
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={MODELS.find((m) => m.id === selectedModel)?.src ?? MODELS[0].src}
+                      src={
+                        MODELS.find((m) => m.id === selectedModel)?.src ??
+                        MODELS[0].src
+                      }
                       alt=""
                       width={20}
                       height={20}
                       className="size-5 shrink-0 rounded object-cover"
                     />
                     <span className="text-sm font-medium">
-                      {MODELS.find((m) => m.id === selectedModel)?.name ?? MODELS[0].name}
+                      {MODELS.find((m) => m.id === selectedModel)?.name ??
+                        MODELS[0].name}
                     </span>
                     <IconChevronDown className="size-4 shrink-0 opacity-70" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="min-w-[--radix-dropdown-menu-trigger-width] bg-white dark:bg-neutral-900">
+                <DropdownMenuContent
+                  align="start"
+                  className="min-w-[--radix-dropdown-menu-trigger-width] bg-white dark:bg-neutral-900"
+                >
                   {MODELS.map((model) => (
                     <DropdownMenuItem
                       key={model.id}

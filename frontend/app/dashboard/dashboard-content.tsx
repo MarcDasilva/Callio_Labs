@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import { AppSidebar } from "@/components/app-sidebar";
 import { ChatbotPanel } from "@/components/chatbot-panel";
@@ -10,6 +11,8 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 const Dither = dynamic(() => import("@/components/Dither"), { ssr: false });
 
 export function DashboardContent() {
+  const [hasStarted, setHasStarted] = useState(false);
+
   return (
     <div className="relative min-h-screen w-full">
       <CallioLabsSplash />
@@ -39,8 +42,17 @@ export function DashboardContent() {
           <AppSidebar variant="inset" />
           <SidebarInset className="!bg-transparent flex flex-col">
             <SiteHeader />
-            <div className="flex flex-1 min-h-0 items-center justify-center p-4">
-              <ChatbotPanel />
+            <div className="flex flex-1 min-h-0 flex-col items-center px-4 pb-6">
+              <div className="flex-1" />
+              <ChatbotPanel onSend={() => setHasStarted(true)} />
+              <div
+                className="transition-[flex-grow] duration-[1400ms] ease-in-out"
+                style={{
+                  flexGrow: hasStarted ? 0 : 1,
+                  flexShrink: 0,
+                  flexBasis: 0,
+                }}
+              />
             </div>
           </SidebarInset>
         </SidebarProvider>
