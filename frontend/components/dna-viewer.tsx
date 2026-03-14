@@ -9,7 +9,7 @@ import type { Material } from "three";
 const DNA_MODEL_URL = "/human_dna.glb";
 
 /** Target size for the model's largest dimension in world units (before camera). */
-const MODEL_SIZE = 2;
+const MODEL_SIZE = 2.5;
 const VIEW_SCALE = 8;
 const OPACITY = 0.5;
 const DNA_COLOR = 0x606060; // neutral dark grey
@@ -200,7 +200,7 @@ export default function DNAViewer({ orbitCenter }: DNAViewerProps = {}) {
             top: "50%",
             width: "145%",
             height: "145%",
-            transform: `translate(calc(-50% + 5%), calc(-50% + 5%)) rotate(-${VIEW_TILT_DEG}deg)`,
+            transform: `translate(calc(-50%), calc(-50% + 5%)) rotate(-${VIEW_TILT_DEG}deg)`,
           }}
         >
           <Canvas

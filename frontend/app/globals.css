@@ -115,6 +115,24 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Callio: semibold from public (Chillax-Semibold) — replace src if you add a Callio font */
+@font-face {
+  font-family: "Callio";
+  src: url("/Chillax_Complete/Fonts/WEB/fonts/Chillax-Semibold.woff2") format("woff2"),
+       url("/Chillax_Complete/Fonts/WEB/fonts/Chillax-Semibold.woff") format("woff");
+  font-weight: 600;
+  font-display: swap;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: "Synonym";
+  src: url("/Synonym-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-display: swap;
+  font-style: normal;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -142,7 +160,7 @@
 
 @keyframes white-splash {
   0%,
-  55.56% {
+  70% {
     opacity: 1;
   }
   100% {
@@ -151,5 +169,5 @@
 }
 
 .animate-white-splash {
-  animation: white-splash 0.9s ease-out forwards;
+  animation: white-splash 2s ease-out forwards;
 }
