@@ -1,1 +1,0 @@
-# GenaiGenesis2026

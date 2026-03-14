@@ -1,0 +1,2 @@
+# For local Modal CLI and running modal run / serve / deploy
+modal>=0.64.0
