@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import { AppSidebar } from "@/components/app-sidebar";
+import { ChatbotPanel } from "@/components/chatbot-panel";
 import { CallioLabsSplash } from "@/components/callio-labs-splash";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -36,9 +37,11 @@ export function DashboardContent() {
           }
         >
           <AppSidebar variant="inset" />
-          <SidebarInset className="!bg-transparent">
+          <SidebarInset className="!bg-transparent flex flex-col">
             <SiteHeader />
-            <div className="flex flex-1 flex-col" />
+            <div className="flex flex-1 min-h-0 items-center justify-center p-4">
+              <ChatbotPanel />
+            </div>
           </SidebarInset>
         </SidebarProvider>
       </div>
