@@ -9,6 +9,7 @@ from typing import Any
 import httpx
 
 DEFAULT_BASE_URL = "https://api.ncbi.nlm.nih.gov/datasets/v2"
+EFETCH_BASE_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 DEFAULT_TIMEOUT = 30.0
 
 
@@ -149,16 +150,20 @@ class NCBIClient:
         page_token: str | None = None,
         chromosome: str | None = None,
     ) -> dict[str, Any]:
-        params: dict[str, Any] = {"limit": limit}
-        if symbol:
-            params["symbol"] = symbol
-        if taxon:
-            params["taxon"] = str(taxon)
+        params: dict[str, Any] = {"page_size": limit}
         if page_token:
             params["page_token"] = page_token
-        if chromosome:
-            params["chromosome"] = chromosome
-        return self.get("/gene/search", params=params)
+
+        if symbol and taxon:
+            path = f"/gene/symbol/{symbol}/taxon/{taxon}"
+        elif taxon:
+            path = f"/gene/taxon/{taxon}"
+        elif symbol:
+            path = f"/gene/symbol/{symbol}/taxon/human"
+        else:
+            return {"reports": [], "total_count": 0}
+
+        return self.get(path, params=params)
 
     # --- Taxonomy ---
 
@@ -242,3 +247,53 @@ class NCBIClient:
             params["include_annotation_type"] = "GENOME_GFF,GENOME_GBFF"
         # NCBI Datasets v2: GET with comma-separated accessions
         return self.get("/assembly/accession", params=params)
+
+    # --- Efetch (Entrez E-Utilities) ---
+
+    def efetch_fasta(
+        self,
+        accession: str,
+        db: str = "nucleotide",
+        seq_start: int | None = None,
+        seq_stop: int | None = None,
+    ) -> str:
+        """Fetch a raw FASTA sequence from NCBI Entrez Efetch.
+
+        Returns the plain-text FASTA string (header + sequence).
+        """
+        params: dict[str, Any] = {
+            "db": db,
+            "id": accession,
+            "rettype": "fasta",
+            "retmode": "text",
+        }
+        if self.api_key:
+            params["api_key"] = self.api_key
+        if seq_start is not None:
+            params["seq_start"] = seq_start
+        if seq_stop is not None:
+            params["seq_stop"] = seq_stop
+
+        url = f"{EFETCH_BASE_URL}/efetch.fcgi"
+        try:
+            resp = httpx.get(url, params=params, timeout=self.timeout)
+            resp.raise_for_status()
+            return resp.text
+        except httpx.HTTPStatusError as e:
+            raise NCBIError(
+                f"Efetch error: {e.response.status_code} — {e.response.text[:500]}",
+                status_code=e.response.status_code,
+                body=e.response.text,
+            ) from e
+        except httpx.RequestError as e:
+            raise NCBIError(f"Efetch request failed: {e}") from e
+
+    def efetch_batch_fasta(
+        self,
+        accessions: list[str],
+        db: str = "nucleotide",
+    ) -> str:
+        """Fetch FASTA sequences for multiple accessions in a single request."""
+        if len(accessions) > 50:
+            raise ValueError("Maximum 50 accessions per batch efetch")
+        return self.efetch_fasta(",".join(accessions), db=db)
