@@ -1,0 +1,1651 @@
+{
+  "data": {
+    "nodes": [
+      {
+        "data": {
+          "id": "ChatInput-bc139",
+          "description": "Get chat inputs from the Playground.",
+          "display_name": "Chat Input",
+          "node": {
+            "base_classes": ["Message"],
+            "description": "Get chat inputs from the Playground.",
+            "display_name": "Chat Input",
+            "icon": "MessagesSquare",
+            "outputs": [
+              {
+                "display_name": "Chat Message",
+                "name": "message",
+                "types": ["Message"],
+                "method": "message_response",
+                "selected": "Message",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "template": {
+              "_type": "Component",
+              "input_value": {
+                "type": "str",
+                "name": "input_value",
+                "display_name": "Input Text",
+                "value": "",
+                "show": true,
+                "multiline": true,
+                "input_types": [],
+                "required": false,
+                "advanced": false
+              },
+              "should_store_message": {
+                "type": "bool",
+                "name": "should_store_message",
+                "display_name": "Store Messages",
+                "value": true,
+                "show": true,
+                "advanced": true
+              },
+              "sender": {
+                "type": "str",
+                "name": "sender",
+                "display_name": "Sender Type",
+                "value": "User",
+                "options": ["Machine", "User"],
+                "show": true,
+                "advanced": true
+              },
+              "sender_name": {
+                "type": "str",
+                "name": "sender_name",
+                "display_name": "Sender Name",
+                "value": "User",
+                "show": true,
+                "advanced": true,
+                "input_types": ["Message"]
+              },
+              "session_id": {
+                "type": "str",
+                "name": "session_id",
+                "display_name": "Session ID",
+                "value": "",
+                "show": true,
+                "advanced": true,
+                "input_types": ["Message"]
+              }
+            }
+          },
+          "type": "ChatInput"
+        },
+        "id": "ChatInput-bc139",
+        "position": { "x": 0, "y": 400 },
+        "type": "genericNode"
+      },
+      {
+        "data": {
+          "id": "Prompt-qparse01",
+          "description": "Prompt: Query Parser Prompt",
+          "display_name": "Query Parser Prompt",
+          "node": {
+            "base_classes": ["Message"],
+            "description": "Prompt: Query Parser Prompt",
+            "display_name": "Query Parser Prompt",
+            "icon": "prompts",
+            "custom_fields": { "template": [] },
+            "outputs": [
+              {
+                "display_name": "Prompt",
+                "name": "prompt",
+                "types": ["Message"],
+                "method": "build_prompt",
+                "selected": "Message",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "template": {
+              "_type": "Component",
+              "template": {
+                "type": "prompt",
+                "name": "template",
+                "display_name": "Template",
+                "value": "You are a Query Parser for a genomic primer design platform. Given the researcher's biological objective below, extract structured parameters for the downstream pipeline.\n\nExtract the following fields as JSON:\n- target_organism: the organism or pathogen of interest\n- gene_or_region: specific gene, genomic region, or variant\n- detection_goal: what the primers should detect or distinguish (e.g., strain-specific detection, gene amplification, variant detection)\n- exclusion_targets: organisms or strains the primers should NOT cross-react with\n- assay_type: one of [\"PCR\", \"qPCR\", \"RT-PCR\", \"nested_PCR\", \"other\"]\n- constraints: any additional constraints (product size, Tm range, etc.)\n\nIf a field cannot be determined from the input, set it to null.\n\nResearcher's objective:\n{user_question}",
+                "show": true,
+                "advanced": false
+              }
+            }
+          },
+          "type": "Prompt"
+        },
+        "id": "Prompt-qparse01",
+        "position": { "x": 400, "y": 400 },
+        "type": "genericNode"
+      },
+      {
+        "data": {
+          "id": "LanguageModelComponent-qparse02",
+          "description": "LLM: Query Parser LLM",
+          "display_name": "Query Parser LLM",
+          "node": {
+            "base_classes": ["LanguageModel", "Message"],
+            "description": "LLM: Query Parser LLM",
+            "display_name": "Query Parser LLM",
+            "icon": "brain-circuit",
+            "outputs": [
+              {
+                "display_name": "Model Response",
+                "name": "text_output",
+                "types": ["Message"],
+                "method": "text_response",
+                "selected": "Message",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              },
+              {
+                "display_name": "Language Model",
+                "name": "model_output",
+                "types": ["LanguageModel"],
+                "method": "build_model",
+                "selected": "LanguageModel",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "template": {
+              "_type": "Component",
+              "model": {
+                "type": "str",
+                "name": "model",
+                "display_name": "Language Model",
+                "value": "",
+                "show": true,
+                "advanced": false,
+                "input_types": ["LanguageModel"],
+                "_input_type": "ModelInput",
+                "required": true,
+                "real_time_refresh": true
+              },
+              "api_key": {
+                "type": "str",
+                "name": "api_key",
+                "display_name": "API Key",
+                "value": "",
+                "show": true,
+                "advanced": true,
+                "password": true,
+                "_input_type": "SecretStrInput"
+              },
+              "input_value": {
+                "type": "str",
+                "name": "input_value",
+                "display_name": "Input",
+                "value": "",
+                "show": true,
+                "advanced": false,
+                "input_types": ["Message"],
+                "_input_type": "MessageInput"
+              },
+              "system_message": {
+                "type": "str",
+                "name": "system_message",
+                "display_name": "System Message",
+                "value": "You are a biological query parser. Extract structured parameters from natural language research objectives for a PCR primer design pipeline. Always respond with valid JSON.",
+                "show": true,
+                "advanced": false,
+                "multiline": true
+              },
+              "stream": { "type": "bool", "name": "stream", "display_name": "Stream", "value": false, "show": true, "advanced": true },
+              "temperature": { "type": "float", "name": "temperature", "display_name": "Temperature", "value": 0.1, "show": true, "advanced": true },
+              "max_tokens": { "type": "int", "name": "max_tokens", "display_name": "Max Tokens", "value": 1024, "show": true, "advanced": true }
+            }
+          },
+          "type": "LanguageModelComponent"
+        },
+        "id": "LanguageModelComponent-qparse02",
+        "position": { "x": 800, "y": 400 },
+        "type": "genericNode"
+      },
+      {
+        "data": {
+          "id": "Prompt-genome01",
+          "description": "Prompt: Genome Retrieval Prompt",
+          "display_name": "Genome Retrieval Prompt",
+          "node": {
+            "base_classes": ["Message"],
+            "description": "Prompt: Genome Retrieval Prompt",
+            "display_name": "Genome Retrieval Prompt",
+            "icon": "prompts",
+            "custom_fields": { "template": [] },
+            "outputs": [
+              {
+                "display_name": "Prompt",
+                "name": "prompt",
+                "types": ["Message"],
+                "method": "build_prompt",
+                "selected": "Message",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "template": {
+              "_type": "Component",
+              "template": {
+                "type": "prompt",
+                "name": "template",
+                "display_name": "Template",
+                "value": "You are a Genome Retrieval Agent for a PCR primer design platform. Given the parsed query parameters and the original research objective, identify and describe the relevant genomic sequences that should be retrieved from public databases (NCBI GenBank, RefSeq, pathogen genome repositories).\n\nFor each genome, provide:\n- accession_id: a plausible accession number or identifier\n- organism: the organism name\n- strain_or_variant: strain/variant if applicable\n- gene_region: the relevant gene or genomic region\n- sequence_length: approximate length in bp\n- relevance: why this genome is relevant to the primer design task\n\nAlso specify:\n- total_genomes_retrieved: count of sequences\n- target_sequences: which are the primary targets for primer binding\n- background_sequences: which are used for specificity exclusion\n\nRespond with valid JSON.\n\nOriginal objective:\n{user_question}\n\nParsed query:\n{parsed_query}",
+                "show": true,
+                "advanced": false
+              }
+            }
+          },
+          "type": "Prompt"
+        },
+        "id": "Prompt-genome01",
+        "position": { "x": 1200, "y": 400 },
+        "type": "genericNode"
+      },
+      {
+        "data": {
+          "id": "LanguageModelComponent-genome02",
+          "description": "LLM: Genome Retrieval Agent LLM",
+          "display_name": "Genome Retrieval Agent LLM",
+          "node": {
+            "base_classes": ["LanguageModel", "Message"],
+            "description": "LLM: Genome Retrieval Agent LLM",
+            "display_name": "Genome Retrieval Agent LLM",
+            "icon": "brain-circuit",
+            "outputs": [
+              {
+                "display_name": "Model Response",
+                "name": "text_output",
+                "types": ["Message"],
+                "method": "text_response",
+                "selected": "Message",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              },
+              {
+                "display_name": "Language Model",
+                "name": "model_output",
+                "types": ["LanguageModel"],
+                "method": "build_model",
+                "selected": "LanguageModel",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "template": {
+              "_type": "Component",
+              "model": {
+                "type": "str",
+                "name": "model",
+                "display_name": "Language Model",
+                "value": "",
+                "show": true,
+                "advanced": false,
+                "input_types": ["LanguageModel"],
+                "_input_type": "ModelInput",
+                "required": true,
+                "real_time_refresh": true
+              },
+              "api_key": {
+                "type": "str",
+                "name": "api_key",
+                "display_name": "API Key",
+                "value": "",
+                "show": true,
+                "advanced": true,
+                "password": true,
+                "_input_type": "SecretStrInput"
+              },
+              "input_value": {
+                "type": "str",
+                "name": "input_value",
+                "display_name": "Input",
+                "value": "",
+                "show": true,
+                "advanced": false,
+                "input_types": ["Message"],
+                "_input_type": "MessageInput"
+              },
+              "system_message": {
+                "type": "str",
+                "name": "system_message",
+                "display_name": "System Message",
+                "value": "You are a bioinformatics genome retrieval specialist. You have deep knowledge of NCBI GenBank, RefSeq, and pathogen genome databases. Identify the most relevant genomic sequences for the given primer design task. Be thorough and realistic about accession numbers and sequence characteristics.",
+                "show": true,
+                "advanced": false,
+                "multiline": true
+              },
+              "stream": { "type": "bool", "name": "stream", "display_name": "Stream", "value": false, "show": true, "advanced": true },
+              "temperature": { "type": "float", "name": "temperature", "display_name": "Temperature", "value": 0.2, "show": true, "advanced": true },
+              "max_tokens": { "type": "int", "name": "max_tokens", "display_name": "Max Tokens", "value": 2048, "show": true, "advanced": true }
+            }
+          },
+          "type": "LanguageModelComponent"
+        },
+        "id": "LanguageModelComponent-genome02",
+        "position": { "x": 1600, "y": 400 },
+        "type": "genericNode"
+      },
+      {
+        "data": {
+          "id": "Prompt-align01",
+          "description": "Prompt: Sequence Analysis Prompt",
+          "display_name": "Sequence Analysis Prompt",
+          "node": {
+            "base_classes": ["Message"],
+            "description": "Prompt: Sequence Analysis Prompt",
+            "display_name": "Sequence Analysis Prompt",
+            "icon": "prompts",
+            "custom_fields": { "template": [] },
+            "outputs": [
+              {
+                "display_name": "Prompt",
+                "name": "prompt",
+                "types": ["Message"],
+                "method": "build_prompt",
+                "selected": "Message",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "template": {
+              "_type": "Component",
+              "template": {
+                "type": "prompt",
+                "name": "template",
+                "display_name": "Template",
+                "value": "You are a Sequence Alignment and Analysis Agent. Given the retrieved genome data below, perform a multiple sequence alignment analysis (as would be done with MAFFT or Clustal Omega).\n\nYour analysis should include:\n1. Alignment summary: overall similarity across sequences\n2. Conserved regions: list genomic positions that are highly conserved (>95% identity), suitable for universal primer binding\n3. Variable regions: list positions with high variability, suitable for strain-specific discrimination\n4. Mutation hotspots: positions with known or predicted functional mutations\n5. Candidate primer zones: regions between 18-30bp that meet conservation criteria for primer binding\n\nFor each candidate zone, provide:\n- start_position and end_position\n- conservation_score (0.0 to 1.0)\n- region_type: \"conserved\" or \"strain_specific\"\n- flanking_context: brief description of surrounding genomic context\n\nRespond with valid JSON.\n\nOriginal objective:\n{user_question}\n\nGenome retrieval data:\n{genome_data}",
+                "show": true,
+                "advanced": false
+              }
+            }
+          },
+          "type": "Prompt"
+        },
+        "id": "Prompt-align01",
+        "position": { "x": 2000, "y": 400 },
+        "type": "genericNode"
+      },
+      {
+        "data": {
+          "id": "LanguageModelComponent-align02",
+          "description": "LLM: Sequence Analysis Agent LLM",
+          "display_name": "Sequence Analysis Agent LLM",
+          "node": {
+            "base_classes": ["LanguageModel", "Message"],
+            "description": "LLM: Sequence Analysis Agent LLM",
+            "display_name": "Sequence Analysis Agent LLM",
+            "icon": "brain-circuit",
+            "outputs": [
+              {
+                "display_name": "Model Response",
+                "name": "text_output",
+                "types": ["Message"],
+                "method": "text_response",
+                "selected": "Message",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              },
+              {
+                "display_name": "Language Model",
+                "name": "model_output",
+                "types": ["LanguageModel"],
+                "method": "build_model",
+                "selected": "LanguageModel",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "template": {
+              "_type": "Component",
+              "model": {
+                "type": "str",
+                "name": "model",
+                "display_name": "Language Model",
+                "value": "",
+                "show": true,
+                "advanced": false,
+                "input_types": ["LanguageModel"],
+                "_input_type": "ModelInput",
+                "required": true,
+                "real_time_refresh": true
+              },
+              "api_key": {
+                "type": "str",
+                "name": "api_key",
+                "display_name": "API Key",
+                "value": "",
+                "show": true,
+                "advanced": true,
+                "password": true,
+                "_input_type": "SecretStrInput"
+              },
+              "input_value": {
+                "type": "str",
+                "name": "input_value",
+                "display_name": "Input",
+                "value": "",
+                "show": true,
+                "advanced": false,
+                "input_types": ["Message"],
+                "_input_type": "MessageInput"
+              },
+              "system_message": {
+                "type": "str",
+                "name": "system_message",
+                "display_name": "System Message",
+                "value": "You are a computational biologist specializing in multiple sequence alignment. You have expertise with MAFFT, Clustal Omega, and conservation analysis. Analyze the genomic sequences and identify the best candidate regions for primer design based on conservation patterns.",
+                "show": true,
+                "advanced": false,
+                "multiline": true
+              },
+              "stream": { "type": "bool", "name": "stream", "display_name": "Stream", "value": false, "show": true, "advanced": true },
+              "temperature": { "type": "float", "name": "temperature", "display_name": "Temperature", "value": 0.2, "show": true, "advanced": true },
+              "max_tokens": { "type": "int", "name": "max_tokens", "display_name": "Max Tokens", "value": 2048, "show": true, "advanced": true }
+            }
+          },
+          "type": "LanguageModelComponent"
+        },
+        "id": "LanguageModelComponent-align02",
+        "position": { "x": 2400, "y": 400 },
+        "type": "genericNode"
+      },
+      {
+        "data": {
+          "id": "Prompt-consrv01",
+          "description": "Prompt: Conserved Region Agent Prompt",
+          "display_name": "Conserved Region Agent Prompt",
+          "node": {
+            "base_classes": ["Message"],
+            "description": "Prompt: Conserved Region Agent Prompt",
+            "display_name": "Conserved Region Agent Prompt",
+            "icon": "prompts",
+            "custom_fields": { "template": [] },
+            "outputs": [
+              {
+                "display_name": "Prompt",
+                "name": "prompt",
+                "types": ["Message"],
+                "method": "build_prompt",
+                "selected": "Message",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "template": {
+              "_type": "Component",
+              "template": {
+                "type": "prompt",
+                "name": "template",
+                "display_name": "Template",
+                "value": "Original objective:\n{user_question}\n\nSequence analysis data:\n{sequence_analysis}",
+                "show": true,
+                "advanced": false
+              }
+            }
+          },
+          "type": "Prompt"
+        },
+        "id": "Prompt-consrv01",
+        "position": { "x": 2800, "y": 0 },
+        "type": "genericNode"
+      },
+      {
+        "data": {
+          "id": "LanguageModelComponent-consrv02",
+          "description": "LLM: Conserved Region Agent LLM",
+          "display_name": "Conserved Region Agent LLM",
+          "node": {
+            "base_classes": ["LanguageModel", "Message"],
+            "description": "LLM: Conserved Region Agent LLM",
+            "display_name": "Conserved Region Agent LLM",
+            "icon": "brain-circuit",
+            "outputs": [
+              {
+                "display_name": "Model Response",
+                "name": "text_output",
+                "types": ["Message"],
+                "method": "text_response",
+                "selected": "Message",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              },
+              {
+                "display_name": "Language Model",
+                "name": "model_output",
+                "types": ["LanguageModel"],
+                "method": "build_model",
+                "selected": "LanguageModel",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "template": {
+              "_type": "Component",
+              "model": {
+                "type": "str",
+                "name": "model",
+                "display_name": "Language Model",
+                "value": "",
+                "show": true,
+                "advanced": false,
+                "input_types": ["LanguageModel"],
+                "_input_type": "ModelInput",
+                "required": true,
+                "real_time_refresh": true
+              },
+              "api_key": {
+                "type": "str",
+                "name": "api_key",
+                "display_name": "API Key",
+                "value": "",
+                "show": true,
+                "advanced": true,
+                "password": true,
+                "_input_type": "SecretStrInput"
+              },
+              "input_value": {
+                "type": "str",
+                "name": "input_value",
+                "display_name": "Input",
+                "value": "",
+                "show": true,
+                "advanced": false,
+                "input_types": ["Message"],
+                "_input_type": "MessageInput"
+              },
+              "system_message": {
+                "type": "str",
+                "name": "system_message",
+                "display_name": "System Message",
+                "value": "You are a Conserved Region Analysis Specialist. Your role is to evaluate candidate primer binding zones from the sequence alignment and identify the best conserved regions for stable, universal primer binding.\n\nFor each candidate region, assess:\n- Conservation score across all target sequences\n- Suitability as a forward or reverse primer binding site\n- Distance between paired conserved regions (for amplicon size 80-200bp)\n- Presence of any SNPs or indels that could disrupt binding\n\nRespond with valid JSON matching this schema:\n{\n  \"conserved_regions\": [\n    {\n      \"region_id\": \"<string>\",\n      \"start\": <int>,\n      \"end\": <int>,\n      \"conservation_score\": <float 0-1>,\n      \"suitable_as\": \"forward|reverse|both\",\n      \"snp_count\": <int>,\n      \"notes\": \"<string>\"\n    }\n  ],\n  \"recommended_pairs\": [\n    {\n      \"forward_region_id\": \"<string>\",\n      \"reverse_region_id\": \"<string>\",\n      \"expected_amplicon_size\": <int>,\n      \"pair_score\": <float 0-1>\n    }\n  ],\n  \"confidence\": <float 0-1>,\n  \"summary\": \"<concise analysis>\"\n}",
+                "show": true,
+                "advanced": false,
+                "multiline": true
+              },
+              "stream": { "type": "bool", "name": "stream", "display_name": "Stream", "value": false, "show": true, "advanced": true },
+              "temperature": { "type": "float", "name": "temperature", "display_name": "Temperature", "value": 0.2, "show": true, "advanced": true },
+              "max_tokens": { "type": "int", "name": "max_tokens", "display_name": "Max Tokens", "value": 2048, "show": true, "advanced": true }
+            }
+          },
+          "type": "LanguageModelComponent"
+        },
+        "id": "LanguageModelComponent-consrv02",
+        "position": { "x": 3200, "y": 0 },
+        "type": "genericNode"
+      },
+      {
+        "data": {
+          "id": "Prompt-primer01",
+          "description": "Prompt: Primer Design Agent Prompt",
+          "display_name": "Primer Design Agent Prompt",
+          "node": {
+            "base_classes": ["Message"],
+            "description": "Prompt: Primer Design Agent Prompt",
+            "display_name": "Primer Design Agent Prompt",
+            "icon": "prompts",
+            "custom_fields": { "template": [] },
+            "outputs": [
+              {
+                "display_name": "Prompt",
+                "name": "prompt",
+                "types": ["Message"],
+                "method": "build_prompt",
+                "selected": "Message",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "template": {
+              "_type": "Component",
+              "template": {
+                "type": "prompt",
+                "name": "template",
+                "display_name": "Template",
+                "value": "Original objective:\n{user_question}\n\nSequence analysis data:\n{sequence_analysis}",
+                "show": true,
+                "advanced": false
+              }
+            }
+          },
+          "type": "Prompt"
+        },
+        "id": "Prompt-primer01",
+        "position": { "x": 2800, "y": 250 },
+        "type": "genericNode"
+      },
+      {
+        "data": {
+          "id": "LanguageModelComponent-primer02",
+          "description": "LLM: Primer Design Agent LLM",
+          "display_name": "Primer Design Agent LLM",
+          "node": {
+            "base_classes": ["LanguageModel", "Message"],
+            "description": "LLM: Primer Design Agent LLM",
+            "display_name": "Primer Design Agent LLM",
+            "icon": "brain-circuit",
+            "outputs": [
+              {
+                "display_name": "Model Response",
+                "name": "text_output",
+                "types": ["Message"],
+                "method": "text_response",
+                "selected": "Message",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              },
+              {
+                "display_name": "Language Model",
+                "name": "model_output",
+                "types": ["LanguageModel"],
+                "method": "build_model",
+                "selected": "LanguageModel",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "template": {
+              "_type": "Component",
+              "model": {
+                "type": "str",
+                "name": "model",
+                "display_name": "Language Model",
+                "value": "",
+                "show": true,
+                "advanced": false,
+                "input_types": ["LanguageModel"],
+                "_input_type": "ModelInput",
+                "required": true,
+                "real_time_refresh": true
+              },
+              "api_key": {
+                "type": "str",
+                "name": "api_key",
+                "display_name": "API Key",
+                "value": "",
+                "show": true,
+                "advanced": true,
+                "password": true,
+                "_input_type": "SecretStrInput"
+              },
+              "input_value": {
+                "type": "str",
+                "name": "input_value",
+                "display_name": "Input",
+                "value": "",
+                "show": true,
+                "advanced": false,
+                "input_types": ["Message"],
+                "_input_type": "MessageInput"
+              },
+              "system_message": {
+                "type": "str",
+                "name": "system_message",
+                "display_name": "System Message",
+                "value": "You are a Primer Design Specialist using Primer3-like constraints. Given the sequence analysis and candidate regions, design multiple primer pair candidates.\n\nDesign constraints:\n- Primer length: 18-24 bp\n- Melting temperature (Tm): 58-62°C\n- GC content: 40-60%\n- PCR product size: 80-200 bp\n- Avoid runs of 4+ identical bases\n- Avoid 3' complementarity between forward and reverse primers\n- Check for hairpin potential (ΔG > -2 kcal/mol)\n\nFor each primer pair, provide:\n{\n  \"pair_id\": \"<string>\",\n  \"forward_primer\": {\n    \"sequence\": \"<5' to 3'>\",\n    \"length\": <int>,\n    \"tm\": <float>,\n    \"gc_percent\": <float>,\n    \"position_start\": <int>,\n    \"position_end\": <int>\n  },\n  \"reverse_primer\": { ... same fields ... },\n  \"amplicon_size\": <int>,\n  \"pair_penalty_score\": <float, lower is better>\n}\n\nGenerate at least 4 candidate primer pairs. Respond with valid JSON:\n{\n  \"primer_pairs\": [ ... ],\n  \"design_notes\": \"<explanation of design choices>\",\n  \"confidence\": <float 0-1>\n}",
+                "show": true,
+                "advanced": false,
+                "multiline": true
+              },
+              "stream": { "type": "bool", "name": "stream", "display_name": "Stream", "value": false, "show": true, "advanced": true },
+              "temperature": { "type": "float", "name": "temperature", "display_name": "Temperature", "value": 0.3, "show": true, "advanced": true },
+              "max_tokens": { "type": "int", "name": "max_tokens", "display_name": "Max Tokens", "value": 3072, "show": true, "advanced": true }
+            }
+          },
+          "type": "LanguageModelComponent"
+        },
+        "id": "LanguageModelComponent-primer02",
+        "position": { "x": 3200, "y": 250 },
+        "type": "genericNode"
+      },
+      {
+        "data": {
+          "id": "Prompt-specif01",
+          "description": "Prompt: Specificity Validation Agent Prompt",
+          "display_name": "Specificity Validation Agent Prompt",
+          "node": {
+            "base_classes": ["Message"],
+            "description": "Prompt: Specificity Validation Agent Prompt",
+            "display_name": "Specificity Validation Agent Prompt",
+            "icon": "prompts",
+            "custom_fields": { "template": [] },
+            "outputs": [
+              {
+                "display_name": "Prompt",
+                "name": "prompt",
+                "types": ["Message"],
+                "method": "build_prompt",
+                "selected": "Message",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "template": {
+              "_type": "Component",
+              "template": {
+                "type": "prompt",
+                "name": "template",
+                "display_name": "Template",
+                "value": "Original objective:\n{user_question}\n\nSequence analysis data:\n{sequence_analysis}",
+                "show": true,
+                "advanced": false
+              }
+            }
+          },
+          "type": "Prompt"
+        },
+        "id": "Prompt-specif01",
+        "position": { "x": 2800, "y": 500 },
+        "type": "genericNode"
+      },
+      {
+        "data": {
+          "id": "LanguageModelComponent-specif02",
+          "description": "LLM: Specificity Validation Agent LLM",
+          "display_name": "Specificity Validation Agent LLM",
+          "node": {
+            "base_classes": ["LanguageModel", "Message"],
+            "description": "LLM: Specificity Validation Agent LLM",
+            "display_name": "Specificity Validation Agent LLM",
+            "icon": "brain-circuit",
+            "outputs": [
+              {
+                "display_name": "Model Response",
+                "name": "text_output",
+                "types": ["Message"],
+                "method": "text_response",
+                "selected": "Message",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              },
+              {
+                "display_name": "Language Model",
+                "name": "model_output",
+                "types": ["LanguageModel"],
+                "method": "build_model",
+                "selected": "LanguageModel",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "template": {
+              "_type": "Component",
+              "model": {
+                "type": "str",
+                "name": "model",
+                "display_name": "Language Model",
+                "value": "",
+                "show": true,
+                "advanced": false,
+                "input_types": ["LanguageModel"],
+                "_input_type": "ModelInput",
+                "required": true,
+                "real_time_refresh": true
+              },
+              "api_key": {
+                "type": "str",
+                "name": "api_key",
+                "display_name": "API Key",
+                "value": "",
+                "show": true,
+                "advanced": true,
+                "password": true,
+                "_input_type": "SecretStrInput"
+              },
+              "input_value": {
+                "type": "str",
+                "name": "input_value",
+                "display_name": "Input",
+                "value": "",
+                "show": true,
+                "advanced": false,
+                "input_types": ["Message"],
+                "_input_type": "MessageInput"
+              },
+              "system_message": {
+                "type": "str",
+                "name": "system_message",
+                "display_name": "System Message",
+                "value": "You are a Specificity Validation Specialist performing BLAST-like analysis. Evaluate candidate primer regions for off-target binding risks.\n\nFor each candidate primer zone from the sequence analysis, assess:\n1. Cross-reactivity with human genome\n2. Cross-reactivity with common commensal organisms\n3. Cross-reactivity with closely related but non-target strains\n4. Multi-locus binding within the target genome\n5. Potential for non-specific amplification\n\nClassify each region as:\n- PASS: highly specific, no significant off-target hits\n- WARN: minor off-target similarity (>80% identity over >15bp)\n- FAIL: significant off-target binding expected\n\nRespond with valid JSON:\n{\n  \"validation_results\": [\n    {\n      \"region_id\": \"<string>\",\n      \"status\": \"PASS|WARN|FAIL\",\n      \"off_target_hits\": <int>,\n      \"worst_hit_identity\": <float 0-1>,\n      \"worst_hit_organism\": \"<string or null>\",\n      \"notes\": \"<string>\"\n    }\n  ],\n  \"overall_specificity_score\": <float 0-1>,\n  \"recommendations\": \"<string>\",\n  \"confidence\": <float 0-1>\n}",
+                "show": true,
+                "advanced": false,
+                "multiline": true
+              },
+              "stream": { "type": "bool", "name": "stream", "display_name": "Stream", "value": false, "show": true, "advanced": true },
+              "temperature": { "type": "float", "name": "temperature", "display_name": "Temperature", "value": 0.2, "show": true, "advanced": true },
+              "max_tokens": { "type": "int", "name": "max_tokens", "display_name": "Max Tokens", "value": 2048, "show": true, "advanced": true }
+            }
+          },
+          "type": "LanguageModelComponent"
+        },
+        "id": "LanguageModelComponent-specif02",
+        "position": { "x": 3200, "y": 500 },
+        "type": "genericNode"
+      },
+      {
+        "data": {
+          "id": "Prompt-thermo01",
+          "description": "Prompt: Thermodynamic Analysis Agent Prompt",
+          "display_name": "Thermodynamic Analysis Agent Prompt",
+          "node": {
+            "base_classes": ["Message"],
+            "description": "Prompt: Thermodynamic Analysis Agent Prompt",
+            "display_name": "Thermodynamic Analysis Agent Prompt",
+            "icon": "prompts",
+            "custom_fields": { "template": [] },
+            "outputs": [
+              {
+                "display_name": "Prompt",
+                "name": "prompt",
+                "types": ["Message"],
+                "method": "build_prompt",
+                "selected": "Message",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "template": {
+              "_type": "Component",
+              "template": {
+                "type": "prompt",
+                "name": "template",
+                "display_name": "Template",
+                "value": "Original objective:\n{user_question}\n\nSequence analysis data:\n{sequence_analysis}",
+                "show": true,
+                "advanced": false
+              }
+            }
+          },
+          "type": "Prompt"
+        },
+        "id": "Prompt-thermo01",
+        "position": { "x": 2800, "y": 750 },
+        "type": "genericNode"
+      },
+      {
+        "data": {
+          "id": "LanguageModelComponent-thermo02",
+          "description": "LLM: Thermodynamic Analysis Agent LLM",
+          "display_name": "Thermodynamic Analysis Agent LLM",
+          "node": {
+            "base_classes": ["LanguageModel", "Message"],
+            "description": "LLM: Thermodynamic Analysis Agent LLM",
+            "display_name": "Thermodynamic Analysis Agent LLM",
+            "icon": "brain-circuit",
+            "outputs": [
+              {
+                "display_name": "Model Response",
+                "name": "text_output",
+                "types": ["Message"],
+                "method": "text_response",
+                "selected": "Message",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              },
+              {
+                "display_name": "Language Model",
+                "name": "model_output",
+                "types": ["LanguageModel"],
+                "method": "build_model",
+                "selected": "LanguageModel",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "template": {
+              "_type": "Component",
+              "model": {
+                "type": "str",
+                "name": "model",
+                "display_name": "Language Model",
+                "value": "",
+                "show": true,
+                "advanced": false,
+                "input_types": ["LanguageModel"],
+                "_input_type": "ModelInput",
+                "required": true,
+                "real_time_refresh": true
+              },
+              "api_key": {
+                "type": "str",
+                "name": "api_key",
+                "display_name": "API Key",
+                "value": "",
+                "show": true,
+                "advanced": true,
+                "password": true,
+                "_input_type": "SecretStrInput"
+              },
+              "input_value": {
+                "type": "str",
+                "name": "input_value",
+                "display_name": "Input",
+                "value": "",
+                "show": true,
+                "advanced": false,
+                "input_types": ["Message"],
+                "_input_type": "MessageInput"
+              },
+              "system_message": {
+                "type": "str",
+                "name": "system_message",
+                "display_name": "System Message",
+                "value": "You are a Thermodynamic Analysis Specialist for PCR primer evaluation. Analyze candidate primer regions for thermodynamic properties critical to PCR success.\n\nFor each candidate region, evaluate:\n1. Melting temperature (Tm) using nearest-neighbor method\n2. Tm balance between forward and reverse primers (ideal: within 2°C)\n3. GC content (ideal: 40-60%)\n4. Self-complementarity and hairpin formation risk (ΔG)\n5. Primer-dimer formation risk (3' complementarity)\n6. Secondary structure stability at annealing temperature\n7. Runs of identical bases (flag runs of 4+)\n\nRespond with valid JSON:\n{\n  \"thermodynamic_analyses\": [\n    {\n      \"region_id\": \"<string>\",\n      \"tm_estimate\": <float>,\n      \"gc_percent\": <float>,\n      \"hairpin_dg\": <float, kcal/mol>,\n      \"self_dimer_dg\": <float>,\n      \"max_base_run\": <int>,\n      \"thermodynamic_score\": <float 0-1>,\n      \"warnings\": [\"<string>\"],\n      \"suitable_for_pcr\": <bool>\n    }\n  ],\n  \"recommended_annealing_temp\": <float>,\n  \"confidence\": <float 0-1>,\n  \"summary\": \"<concise analysis>\"\n}",
+                "show": true,
+                "advanced": false,
+                "multiline": true
+              },
+              "stream": { "type": "bool", "name": "stream", "display_name": "Stream", "value": false, "show": true, "advanced": true },
+              "temperature": { "type": "float", "name": "temperature", "display_name": "Temperature", "value": 0.2, "show": true, "advanced": true },
+              "max_tokens": { "type": "int", "name": "max_tokens", "display_name": "Max Tokens", "value": 2048, "show": true, "advanced": true }
+            }
+          },
+          "type": "LanguageModelComponent"
+        },
+        "id": "LanguageModelComponent-thermo02",
+        "position": { "x": 3200, "y": 750 },
+        "type": "genericNode"
+      },
+      {
+        "data": {
+          "id": "Prompt-qcjudge01",
+          "description": "Prompt: Quality Judge Prompt",
+          "display_name": "Quality Judge Prompt",
+          "node": {
+            "base_classes": ["Message"],
+            "description": "Prompt: Quality Judge Prompt",
+            "display_name": "Quality Judge Prompt",
+            "icon": "prompts",
+            "custom_fields": { "template": [] },
+            "outputs": [
+              {
+                "display_name": "Prompt",
+                "name": "prompt",
+                "types": ["Message"],
+                "method": "build_prompt",
+                "selected": "Message",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "template": {
+              "_type": "Component",
+              "template": {
+                "type": "prompt",
+                "name": "template",
+                "display_name": "Template",
+                "value": "Original objective:\n{user_question}\n\nAnalyses to evaluate:\n\n--- Conserved Region Analysis ---\n{conserved_region_analysis}\n\n--- Primer Design Candidates ---\n{primer_designs}\n\n--- Specificity Validation ---\n{specificity_results}\n\n--- Thermodynamic Analysis ---\n{thermodynamic_analysis}\n",
+                "show": true,
+                "advanced": false
+              }
+            }
+          },
+          "type": "Prompt"
+        },
+        "id": "Prompt-qcjudge01",
+        "position": { "x": 3600, "y": 400 },
+        "type": "genericNode"
+      },
+      {
+        "data": {
+          "id": "LanguageModelComponent-qcjudge02",
+          "description": "LLM: Quality Judge (Chief Scientist) LLM",
+          "display_name": "Quality Judge (Chief Scientist) LLM",
+          "node": {
+            "base_classes": ["LanguageModel", "Message"],
+            "description": "LLM: Quality Judge (Chief Scientist) LLM",
+            "display_name": "Quality Judge (Chief Scientist) LLM",
+            "icon": "brain-circuit",
+            "outputs": [
+              {
+                "display_name": "Model Response",
+                "name": "text_output",
+                "types": ["Message"],
+                "method": "text_response",
+                "selected": "Message",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              },
+              {
+                "display_name": "Language Model",
+                "name": "model_output",
+                "types": ["LanguageModel"],
+                "method": "build_model",
+                "selected": "LanguageModel",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "template": {
+              "_type": "Component",
+              "model": {
+                "type": "str",
+                "name": "model",
+                "display_name": "Language Model",
+                "value": "",
+                "show": true,
+                "advanced": false,
+                "input_types": ["LanguageModel"],
+                "_input_type": "ModelInput",
+                "required": true,
+                "real_time_refresh": true
+              },
+              "api_key": {
+                "type": "str",
+                "name": "api_key",
+                "display_name": "API Key",
+                "value": "",
+                "show": true,
+                "advanced": true,
+                "password": true,
+                "_input_type": "SecretStrInput"
+              },
+              "input_value": {
+                "type": "str",
+                "name": "input_value",
+                "display_name": "Input",
+                "value": "",
+                "show": true,
+                "advanced": false,
+                "input_types": ["Message"],
+                "_input_type": "MessageInput"
+              },
+              "system_message": {
+                "type": "str",
+                "name": "system_message",
+                "display_name": "System Message",
+                "value": "You are the Chief Scientist and Quality Judge for a PCR primer design pipeline. Your task is to integrate results from all specialist agents (conserved region analysis, primer design, specificity validation, thermodynamic analysis) and produce a final ranked list of primer pair recommendations.\n\nRanking criteria (weighted):\n1. Specificity (30%) — primers must not cross-react with non-target sequences\n2. Conservation (25%) — primers must bind reliably across target sequences\n3. Thermodynamic quality (20%) — Tm balance, no dimers, no hairpins\n4. Amplicon suitability (15%) — product size within 80-200bp range\n5. Robustness (10%) — tolerance to minor sequence variations\n\nFor each primer pair, assign a composite score and provide pass/fail determination.\n\nSet meets_threshold to true only if at least one primer pair scores >= 0.7 composite and passes all specificity checks.\n\nIf no primers meet the threshold, suggest agentic adaptations:\n- Expand the search window\n- Relax Tm constraints\n- Try alternative conserved regions\n- Consider degenerate primers\n\nRespond with valid JSON:\n{\n  \"ranked_primers\": [\n    {\n      \"pair_id\": \"<string>\",\n      \"composite_score\": <float 0-1>,\n      \"specificity_score\": <float>,\n      \"conservation_score\": <float>,\n      \"thermodynamic_score\": <float>,\n      \"amplicon_score\": <float>,\n      \"status\": \"PASS|FAIL\",\n      \"notes\": \"<string>\"\n    }\n  ],\n  \"selected_pair_id\": \"<string>\",\n  \"reasoning\": \"<explanation of ranking and selection>\",\n  \"meets_threshold\": <bool>,\n  \"adaptations_needed\": [\"<string>\"] \n}",
+                "show": true,
+                "advanced": false,
+                "multiline": true
+              },
+              "stream": { "type": "bool", "name": "stream", "display_name": "Stream", "value": false, "show": true, "advanced": true },
+              "temperature": { "type": "float", "name": "temperature", "display_name": "Temperature", "value": 0.2, "show": true, "advanced": true },
+              "max_tokens": { "type": "int", "name": "max_tokens", "display_name": "Max Tokens", "value": 3072, "show": true, "advanced": true }
+            }
+          },
+          "type": "LanguageModelComponent"
+        },
+        "id": "LanguageModelComponent-qcjudge02",
+        "position": { "x": 4000, "y": 400 },
+        "type": "genericNode"
+      },
+      {
+        "data": {
+          "id": "Prompt-output01",
+          "description": "Prompt: Experiment Output Composer Prompt",
+          "display_name": "Experiment Output Composer Prompt",
+          "node": {
+            "base_classes": ["Message"],
+            "description": "Prompt: Experiment Output Composer Prompt",
+            "display_name": "Experiment Output Composer Prompt",
+            "icon": "prompts",
+            "custom_fields": { "template": [] },
+            "outputs": [
+              {
+                "display_name": "Prompt",
+                "name": "prompt",
+                "types": ["Message"],
+                "method": "build_prompt",
+                "selected": "Message",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "template": {
+              "_type": "Component",
+              "template": {
+                "type": "prompt",
+                "name": "template",
+                "display_name": "Template",
+                "value": "Original researcher objective:\n{user_question}\n\nQuality judge output with ranked primer pairs:\n{judge_output}\n\nCompose a complete, researcher-friendly experiment output.",
+                "show": true,
+                "advanced": false
+              }
+            }
+          },
+          "type": "Prompt"
+        },
+        "id": "Prompt-output01",
+        "position": { "x": 4400, "y": 400 },
+        "type": "genericNode"
+      },
+      {
+        "data": {
+          "id": "LanguageModelComponent-output02",
+          "description": "LLM: Experiment Output Composer LLM",
+          "display_name": "Experiment Output Composer LLM",
+          "node": {
+            "base_classes": ["LanguageModel", "Message"],
+            "description": "LLM: Experiment Output Composer LLM",
+            "display_name": "Experiment Output Composer LLM",
+            "icon": "brain-circuit",
+            "outputs": [
+              {
+                "display_name": "Model Response",
+                "name": "text_output",
+                "types": ["Message"],
+                "method": "text_response",
+                "selected": "Message",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              },
+              {
+                "display_name": "Language Model",
+                "name": "model_output",
+                "types": ["LanguageModel"],
+                "method": "build_model",
+                "selected": "LanguageModel",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "template": {
+              "_type": "Component",
+              "model": {
+                "type": "str",
+                "name": "model",
+                "display_name": "Language Model",
+                "value": "",
+                "show": true,
+                "advanced": false,
+                "input_types": ["LanguageModel"],
+                "_input_type": "ModelInput",
+                "required": true,
+                "real_time_refresh": true
+              },
+              "api_key": {
+                "type": "str",
+                "name": "api_key",
+                "display_name": "API Key",
+                "value": "",
+                "show": true,
+                "advanced": true,
+                "password": true,
+                "_input_type": "SecretStrInput"
+              },
+              "input_value": {
+                "type": "str",
+                "name": "input_value",
+                "display_name": "Input",
+                "value": "",
+                "show": true,
+                "advanced": false,
+                "input_types": ["Message"],
+                "_input_type": "MessageInput"
+              },
+              "system_message": {
+                "type": "str",
+                "name": "system_message",
+                "display_name": "System Message",
+                "value": "You are an Experiment Output Composer for a genomic primer design platform. Synthesize the quality-checked primer results into a complete, lab-ready output document.\n\nYour output must include:\n\n1. **Summary**: Brief overview of the analysis performed and the biological objective\n2. **Top Primer Pairs**: Ranked list with full details:\n   - Forward primer sequence (5' → 3')\n   - Reverse primer sequence (5' → 3')\n   - Amplicon size (bp)\n   - Melting temperatures (Tm)\n   - GC content (%)\n3. **PCR Protocol**: Suggested reaction conditions:\n   - Annealing temperature\n   - Extension time\n   - Cycle count\n   - Recommended polymerase\n4. **Ordering Information**: Ready-to-order primer table with names and sequences\n5. **Quality Notes**: Any caveats, limitations, or suggestions for experimental validation\n6. **Agent Reasoning Log**: Summary of the pipeline steps taken\n\nFormat the output in clear, readable Markdown. Be accurate, practical, and note any limitations. Do NOT provide clinical diagnoses. If primer quality is marginal, clearly state this and suggest alternatives.",
+                "show": true,
+                "advanced": false,
+                "multiline": true
+              },
+              "stream": { "type": "bool", "name": "stream", "display_name": "Stream", "value": false, "show": true, "advanced": true },
+              "temperature": { "type": "float", "name": "temperature", "display_name": "Temperature", "value": 0.3, "show": true, "advanced": true },
+              "max_tokens": { "type": "int", "name": "max_tokens", "display_name": "Max Tokens", "value": 4096, "show": true, "advanced": true }
+            }
+          },
+          "type": "LanguageModelComponent"
+        },
+        "id": "LanguageModelComponent-output02",
+        "position": { "x": 4800, "y": 400 },
+        "type": "genericNode"
+      },
+      {
+        "data": {
+          "id": "ChatOutput-ed4ee",
+          "description": "Display a chat message in the Playground.",
+          "display_name": "Chat Output",
+          "node": {
+            "base_classes": ["Message"],
+            "description": "Display a chat message in the Playground.",
+            "display_name": "Chat Output",
+            "icon": "MessagesSquare",
+            "outputs": [
+              {
+                "display_name": "Output Message",
+                "name": "message",
+                "types": ["Message"],
+                "method": "message_response",
+                "selected": "Message",
+                "cache": true,
+                "value": "__UNDEFINED__"
+              }
+            ],
+            "template": {
+              "_type": "Component",
+              "input_value": {
+                "type": "str",
+                "name": "input_value",
+                "display_name": "Inputs",
+                "value": "",
+                "show": true,
+                "advanced": false,
+                "input_types": ["Data", "JSON", "DataFrame", "Table", "Message"],
+                "required": true,
+                "_input_type": "MessageInput"
+              },
+              "should_store_message": {
+                "type": "bool",
+                "name": "should_store_message",
+                "display_name": "Store Messages",
+                "value": true,
+                "show": true,
+                "advanced": true
+              },
+              "sender": {
+                "type": "str",
+                "name": "sender",
+                "display_name": "Sender Type",
+                "value": "Machine",
+                "options": ["Machine", "User"],
+                "show": true,
+                "advanced": true
+              },
+              "sender_name": {
+                "type": "str",
+                "name": "sender_name",
+                "display_name": "Sender Name",
+                "value": "AI",
+                "show": true,
+                "advanced": true,
+                "input_types": ["Message"]
+              },
+              "session_id": {
+                "type": "str",
+                "name": "session_id",
+                "display_name": "Session ID",
+                "value": "",
+                "show": true,
+                "advanced": true,
+                "input_types": ["Message"]
+              },
+              "data_template": {
+                "type": "str",
+                "name": "data_template",
+                "display_name": "Data Template",
+                "value": "{text}",
+                "show": true,
+                "advanced": true,
+                "input_types": ["Message"]
+              }
+            }
+          },
+          "type": "ChatOutput"
+        },
+        "id": "ChatOutput-ed4ee",
+        "position": { "x": 5200, "y": 400 },
+        "type": "genericNode"
+      }
+    ],
+    "edges": [
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "ChatInput", "id": "ChatInput-bc139", "name": "message", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "user_question", "id": "Prompt-qparse01", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-ChatInput-bc139-Prompt-qparse01-user_question",
+        "source": "ChatInput-bc139",
+        "sourceHandle": "{\"dataType\": \"ChatInput\", \"id\": \"ChatInput-bc139\", \"name\": \"message\", \"output_types\": [\"Message\"]}",
+        "target": "Prompt-qparse01",
+        "targetHandle": "{\"fieldName\": \"user_question\", \"id\": \"Prompt-qparse01\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "Prompt", "id": "Prompt-qparse01", "name": "prompt", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "input_value", "id": "LanguageModelComponent-qparse02", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-Prompt-qparse01-LanguageModelComponent-qparse02-input_value",
+        "source": "Prompt-qparse01",
+        "sourceHandle": "{\"dataType\": \"Prompt\", \"id\": \"Prompt-qparse01\", \"name\": \"prompt\", \"output_types\": [\"Message\"]}",
+        "target": "LanguageModelComponent-qparse02",
+        "targetHandle": "{\"fieldName\": \"input_value\", \"id\": \"LanguageModelComponent-qparse02\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "ChatInput", "id": "ChatInput-bc139", "name": "message", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "user_question", "id": "Prompt-genome01", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-ChatInput-bc139-Prompt-genome01-user_question",
+        "source": "ChatInput-bc139",
+        "sourceHandle": "{\"dataType\": \"ChatInput\", \"id\": \"ChatInput-bc139\", \"name\": \"message\", \"output_types\": [\"Message\"]}",
+        "target": "Prompt-genome01",
+        "targetHandle": "{\"fieldName\": \"user_question\", \"id\": \"Prompt-genome01\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "LanguageModelComponent", "id": "LanguageModelComponent-qparse02", "name": "text_output", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "parsed_query", "id": "Prompt-genome01", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-LanguageModelComponent-qparse02-Prompt-genome01-parsed_query",
+        "source": "LanguageModelComponent-qparse02",
+        "sourceHandle": "{\"dataType\": \"LanguageModelComponent\", \"id\": \"LanguageModelComponent-qparse02\", \"name\": \"text_output\", \"output_types\": [\"Message\"]}",
+        "target": "Prompt-genome01",
+        "targetHandle": "{\"fieldName\": \"parsed_query\", \"id\": \"Prompt-genome01\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "Prompt", "id": "Prompt-genome01", "name": "prompt", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "input_value", "id": "LanguageModelComponent-genome02", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-Prompt-genome01-LanguageModelComponent-genome02-input_value",
+        "source": "Prompt-genome01",
+        "sourceHandle": "{\"dataType\": \"Prompt\", \"id\": \"Prompt-genome01\", \"name\": \"prompt\", \"output_types\": [\"Message\"]}",
+        "target": "LanguageModelComponent-genome02",
+        "targetHandle": "{\"fieldName\": \"input_value\", \"id\": \"LanguageModelComponent-genome02\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "ChatInput", "id": "ChatInput-bc139", "name": "message", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "user_question", "id": "Prompt-align01", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-ChatInput-bc139-Prompt-align01-user_question",
+        "source": "ChatInput-bc139",
+        "sourceHandle": "{\"dataType\": \"ChatInput\", \"id\": \"ChatInput-bc139\", \"name\": \"message\", \"output_types\": [\"Message\"]}",
+        "target": "Prompt-align01",
+        "targetHandle": "{\"fieldName\": \"user_question\", \"id\": \"Prompt-align01\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "LanguageModelComponent", "id": "LanguageModelComponent-genome02", "name": "text_output", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "genome_data", "id": "Prompt-align01", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-LanguageModelComponent-genome02-Prompt-align01-genome_data",
+        "source": "LanguageModelComponent-genome02",
+        "sourceHandle": "{\"dataType\": \"LanguageModelComponent\", \"id\": \"LanguageModelComponent-genome02\", \"name\": \"text_output\", \"output_types\": [\"Message\"]}",
+        "target": "Prompt-align01",
+        "targetHandle": "{\"fieldName\": \"genome_data\", \"id\": \"Prompt-align01\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "Prompt", "id": "Prompt-align01", "name": "prompt", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "input_value", "id": "LanguageModelComponent-align02", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-Prompt-align01-LanguageModelComponent-align02-input_value",
+        "source": "Prompt-align01",
+        "sourceHandle": "{\"dataType\": \"Prompt\", \"id\": \"Prompt-align01\", \"name\": \"prompt\", \"output_types\": [\"Message\"]}",
+        "target": "LanguageModelComponent-align02",
+        "targetHandle": "{\"fieldName\": \"input_value\", \"id\": \"LanguageModelComponent-align02\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "ChatInput", "id": "ChatInput-bc139", "name": "message", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "user_question", "id": "Prompt-consrv01", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-ChatInput-bc139-Prompt-consrv01-user_question",
+        "source": "ChatInput-bc139",
+        "sourceHandle": "{\"dataType\": \"ChatInput\", \"id\": \"ChatInput-bc139\", \"name\": \"message\", \"output_types\": [\"Message\"]}",
+        "target": "Prompt-consrv01",
+        "targetHandle": "{\"fieldName\": \"user_question\", \"id\": \"Prompt-consrv01\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "LanguageModelComponent", "id": "LanguageModelComponent-align02", "name": "text_output", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "sequence_analysis", "id": "Prompt-consrv01", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-LanguageModelComponent-align02-Prompt-consrv01-sequence_analysis",
+        "source": "LanguageModelComponent-align02",
+        "sourceHandle": "{\"dataType\": \"LanguageModelComponent\", \"id\": \"LanguageModelComponent-align02\", \"name\": \"text_output\", \"output_types\": [\"Message\"]}",
+        "target": "Prompt-consrv01",
+        "targetHandle": "{\"fieldName\": \"sequence_analysis\", \"id\": \"Prompt-consrv01\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "Prompt", "id": "Prompt-consrv01", "name": "prompt", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "input_value", "id": "LanguageModelComponent-consrv02", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-Prompt-consrv01-LanguageModelComponent-consrv02-input_value",
+        "source": "Prompt-consrv01",
+        "sourceHandle": "{\"dataType\": \"Prompt\", \"id\": \"Prompt-consrv01\", \"name\": \"prompt\", \"output_types\": [\"Message\"]}",
+        "target": "LanguageModelComponent-consrv02",
+        "targetHandle": "{\"fieldName\": \"input_value\", \"id\": \"LanguageModelComponent-consrv02\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "ChatInput", "id": "ChatInput-bc139", "name": "message", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "user_question", "id": "Prompt-primer01", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-ChatInput-bc139-Prompt-primer01-user_question",
+        "source": "ChatInput-bc139",
+        "sourceHandle": "{\"dataType\": \"ChatInput\", \"id\": \"ChatInput-bc139\", \"name\": \"message\", \"output_types\": [\"Message\"]}",
+        "target": "Prompt-primer01",
+        "targetHandle": "{\"fieldName\": \"user_question\", \"id\": \"Prompt-primer01\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "LanguageModelComponent", "id": "LanguageModelComponent-align02", "name": "text_output", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "sequence_analysis", "id": "Prompt-primer01", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-LanguageModelComponent-align02-Prompt-primer01-sequence_analysis",
+        "source": "LanguageModelComponent-align02",
+        "sourceHandle": "{\"dataType\": \"LanguageModelComponent\", \"id\": \"LanguageModelComponent-align02\", \"name\": \"text_output\", \"output_types\": [\"Message\"]}",
+        "target": "Prompt-primer01",
+        "targetHandle": "{\"fieldName\": \"sequence_analysis\", \"id\": \"Prompt-primer01\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "Prompt", "id": "Prompt-primer01", "name": "prompt", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "input_value", "id": "LanguageModelComponent-primer02", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-Prompt-primer01-LanguageModelComponent-primer02-input_value",
+        "source": "Prompt-primer01",
+        "sourceHandle": "{\"dataType\": \"Prompt\", \"id\": \"Prompt-primer01\", \"name\": \"prompt\", \"output_types\": [\"Message\"]}",
+        "target": "LanguageModelComponent-primer02",
+        "targetHandle": "{\"fieldName\": \"input_value\", \"id\": \"LanguageModelComponent-primer02\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "ChatInput", "id": "ChatInput-bc139", "name": "message", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "user_question", "id": "Prompt-specif01", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-ChatInput-bc139-Prompt-specif01-user_question",
+        "source": "ChatInput-bc139",
+        "sourceHandle": "{\"dataType\": \"ChatInput\", \"id\": \"ChatInput-bc139\", \"name\": \"message\", \"output_types\": [\"Message\"]}",
+        "target": "Prompt-specif01",
+        "targetHandle": "{\"fieldName\": \"user_question\", \"id\": \"Prompt-specif01\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "LanguageModelComponent", "id": "LanguageModelComponent-align02", "name": "text_output", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "sequence_analysis", "id": "Prompt-specif01", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-LanguageModelComponent-align02-Prompt-specif01-sequence_analysis",
+        "source": "LanguageModelComponent-align02",
+        "sourceHandle": "{\"dataType\": \"LanguageModelComponent\", \"id\": \"LanguageModelComponent-align02\", \"name\": \"text_output\", \"output_types\": [\"Message\"]}",
+        "target": "Prompt-specif01",
+        "targetHandle": "{\"fieldName\": \"sequence_analysis\", \"id\": \"Prompt-specif01\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "Prompt", "id": "Prompt-specif01", "name": "prompt", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "input_value", "id": "LanguageModelComponent-specif02", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-Prompt-specif01-LanguageModelComponent-specif02-input_value",
+        "source": "Prompt-specif01",
+        "sourceHandle": "{\"dataType\": \"Prompt\", \"id\": \"Prompt-specif01\", \"name\": \"prompt\", \"output_types\": [\"Message\"]}",
+        "target": "LanguageModelComponent-specif02",
+        "targetHandle": "{\"fieldName\": \"input_value\", \"id\": \"LanguageModelComponent-specif02\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "ChatInput", "id": "ChatInput-bc139", "name": "message", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "user_question", "id": "Prompt-thermo01", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-ChatInput-bc139-Prompt-thermo01-user_question",
+        "source": "ChatInput-bc139",
+        "sourceHandle": "{\"dataType\": \"ChatInput\", \"id\": \"ChatInput-bc139\", \"name\": \"message\", \"output_types\": [\"Message\"]}",
+        "target": "Prompt-thermo01",
+        "targetHandle": "{\"fieldName\": \"user_question\", \"id\": \"Prompt-thermo01\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "LanguageModelComponent", "id": "LanguageModelComponent-align02", "name": "text_output", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "sequence_analysis", "id": "Prompt-thermo01", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-LanguageModelComponent-align02-Prompt-thermo01-sequence_analysis",
+        "source": "LanguageModelComponent-align02",
+        "sourceHandle": "{\"dataType\": \"LanguageModelComponent\", \"id\": \"LanguageModelComponent-align02\", \"name\": \"text_output\", \"output_types\": [\"Message\"]}",
+        "target": "Prompt-thermo01",
+        "targetHandle": "{\"fieldName\": \"sequence_analysis\", \"id\": \"Prompt-thermo01\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "Prompt", "id": "Prompt-thermo01", "name": "prompt", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "input_value", "id": "LanguageModelComponent-thermo02", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-Prompt-thermo01-LanguageModelComponent-thermo02-input_value",
+        "source": "Prompt-thermo01",
+        "sourceHandle": "{\"dataType\": \"Prompt\", \"id\": \"Prompt-thermo01\", \"name\": \"prompt\", \"output_types\": [\"Message\"]}",
+        "target": "LanguageModelComponent-thermo02",
+        "targetHandle": "{\"fieldName\": \"input_value\", \"id\": \"LanguageModelComponent-thermo02\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "ChatInput", "id": "ChatInput-bc139", "name": "message", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "user_question", "id": "Prompt-qcjudge01", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-ChatInput-bc139-Prompt-qcjudge01-user_question",
+        "source": "ChatInput-bc139",
+        "sourceHandle": "{\"dataType\": \"ChatInput\", \"id\": \"ChatInput-bc139\", \"name\": \"message\", \"output_types\": [\"Message\"]}",
+        "target": "Prompt-qcjudge01",
+        "targetHandle": "{\"fieldName\": \"user_question\", \"id\": \"Prompt-qcjudge01\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "LanguageModelComponent", "id": "LanguageModelComponent-consrv02", "name": "text_output", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "conserved_region_analysis", "id": "Prompt-qcjudge01", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-LanguageModelComponent-consrv02-Prompt-qcjudge01-conserved_region_analysis",
+        "source": "LanguageModelComponent-consrv02",
+        "sourceHandle": "{\"dataType\": \"LanguageModelComponent\", \"id\": \"LanguageModelComponent-consrv02\", \"name\": \"text_output\", \"output_types\": [\"Message\"]}",
+        "target": "Prompt-qcjudge01",
+        "targetHandle": "{\"fieldName\": \"conserved_region_analysis\", \"id\": \"Prompt-qcjudge01\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "LanguageModelComponent", "id": "LanguageModelComponent-primer02", "name": "text_output", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "primer_designs", "id": "Prompt-qcjudge01", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-LanguageModelComponent-primer02-Prompt-qcjudge01-primer_designs",
+        "source": "LanguageModelComponent-primer02",
+        "sourceHandle": "{\"dataType\": \"LanguageModelComponent\", \"id\": \"LanguageModelComponent-primer02\", \"name\": \"text_output\", \"output_types\": [\"Message\"]}",
+        "target": "Prompt-qcjudge01",
+        "targetHandle": "{\"fieldName\": \"primer_designs\", \"id\": \"Prompt-qcjudge01\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "LanguageModelComponent", "id": "LanguageModelComponent-specif02", "name": "text_output", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "specificity_results", "id": "Prompt-qcjudge01", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-LanguageModelComponent-specif02-Prompt-qcjudge01-specificity_results",
+        "source": "LanguageModelComponent-specif02",
+        "sourceHandle": "{\"dataType\": \"LanguageModelComponent\", \"id\": \"LanguageModelComponent-specif02\", \"name\": \"text_output\", \"output_types\": [\"Message\"]}",
+        "target": "Prompt-qcjudge01",
+        "targetHandle": "{\"fieldName\": \"specificity_results\", \"id\": \"Prompt-qcjudge01\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "LanguageModelComponent", "id": "LanguageModelComponent-thermo02", "name": "text_output", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "thermodynamic_analysis", "id": "Prompt-qcjudge01", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-LanguageModelComponent-thermo02-Prompt-qcjudge01-thermodynamic_analysis",
+        "source": "LanguageModelComponent-thermo02",
+        "sourceHandle": "{\"dataType\": \"LanguageModelComponent\", \"id\": \"LanguageModelComponent-thermo02\", \"name\": \"text_output\", \"output_types\": [\"Message\"]}",
+        "target": "Prompt-qcjudge01",
+        "targetHandle": "{\"fieldName\": \"thermodynamic_analysis\", \"id\": \"Prompt-qcjudge01\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "Prompt", "id": "Prompt-qcjudge01", "name": "prompt", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "input_value", "id": "LanguageModelComponent-qcjudge02", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-Prompt-qcjudge01-LanguageModelComponent-qcjudge02-input_value",
+        "source": "Prompt-qcjudge01",
+        "sourceHandle": "{\"dataType\": \"Prompt\", \"id\": \"Prompt-qcjudge01\", \"name\": \"prompt\", \"output_types\": [\"Message\"]}",
+        "target": "LanguageModelComponent-qcjudge02",
+        "targetHandle": "{\"fieldName\": \"input_value\", \"id\": \"LanguageModelComponent-qcjudge02\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "ChatInput", "id": "ChatInput-bc139", "name": "message", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "user_question", "id": "Prompt-output01", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-ChatInput-bc139-Prompt-output01-user_question",
+        "source": "ChatInput-bc139",
+        "sourceHandle": "{\"dataType\": \"ChatInput\", \"id\": \"ChatInput-bc139\", \"name\": \"message\", \"output_types\": [\"Message\"]}",
+        "target": "Prompt-output01",
+        "targetHandle": "{\"fieldName\": \"user_question\", \"id\": \"Prompt-output01\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "LanguageModelComponent", "id": "LanguageModelComponent-qcjudge02", "name": "text_output", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "judge_output", "id": "Prompt-output01", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-LanguageModelComponent-qcjudge02-Prompt-output01-judge_output",
+        "source": "LanguageModelComponent-qcjudge02",
+        "sourceHandle": "{\"dataType\": \"LanguageModelComponent\", \"id\": \"LanguageModelComponent-qcjudge02\", \"name\": \"text_output\", \"output_types\": [\"Message\"]}",
+        "target": "Prompt-output01",
+        "targetHandle": "{\"fieldName\": \"judge_output\", \"id\": \"Prompt-output01\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "Prompt", "id": "Prompt-output01", "name": "prompt", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "input_value", "id": "LanguageModelComponent-output02", "inputTypes": ["Message"], "type": "str" }
+        },
+        "id": "edge-Prompt-output01-LanguageModelComponent-output02-input_value",
+        "source": "Prompt-output01",
+        "sourceHandle": "{\"dataType\": \"Prompt\", \"id\": \"Prompt-output01\", \"name\": \"prompt\", \"output_types\": [\"Message\"]}",
+        "target": "LanguageModelComponent-output02",
+        "targetHandle": "{\"fieldName\": \"input_value\", \"id\": \"LanguageModelComponent-output02\", \"inputTypes\": [\"Message\"], \"type\": \"str\"}"
+      },
+      {
+        "animated": false,
+        "data": {
+          "sourceHandle": { "dataType": "LanguageModelComponent", "id": "LanguageModelComponent-output02", "name": "text_output", "output_types": ["Message"] },
+          "targetHandle": { "fieldName": "input_value", "id": "ChatOutput-ed4ee", "inputTypes": ["Data", "JSON", "DataFrame", "Table", "Message"], "type": "str" }
+        },
+        "id": "edge-LanguageModelComponent-output02-ChatOutput-ed4ee-input_value",
+        "source": "LanguageModelComponent-output02",
+        "sourceHandle": "{\"dataType\": \"LanguageModelComponent\", \"id\": \"LanguageModelComponent-output02\", \"name\": \"text_output\", \"output_types\": [\"Message\"]}",
+        "target": "ChatOutput-ed4ee",
+        "targetHandle": "{\"fieldName\": \"input_value\", \"id\": \"ChatOutput-ed4ee\", \"inputTypes\": [\"Data\", \"JSON\", \"DataFrame\", \"Table\", \"Message\"], \"type\": \"str\"}"
+      }
+    ]
+  },
+  "description": "Agentic Genome Analysis & Primer Design Platform \u2014 Multi-agent pipeline for automated PCR primer design with fan-out/fan-in quality validation",
+  "name": "Genome Primer Design Agent",
+  "endpoint_name": "genome-primer-design",
+  "is_component": false
+}

@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
-import uvicorn
+from dotenv import load_dotenv
+
+# Load backend/.env so NCBI_API_KEY (and MCP_* vars) are set when run from any cwd
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 from .server import mcp
 
@@ -15,9 +19,7 @@ def main() -> None:
     if transport == "http":
         host = os.environ.get("MCP_HOST", "127.0.0.1")
         port = int(os.environ.get("MCP_PORT", "8000"))
-        # Use http_app() + uvicorn so custom routes (/health, /) are mounted and MCP works
-        app = mcp.http_app()
-        uvicorn.run(app, host=host, port=port)
+        mcp.run(transport="http", host=host, port=port)
     else:
         mcp.run()
 

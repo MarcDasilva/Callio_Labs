@@ -48,6 +48,24 @@ def _json_text(obj: Any) -> str:
     return json.dumps(obj, indent=2)
 
 
+MAX_GENE_CHARS = 8000
+
+
+def _truncate_gene_output(text: str) -> str:
+    """Hard-cap any gene-related output to MAX_GENE_CHARS to protect the context window."""
+    if len(text) <= MAX_GENE_CHARS:
+        return text
+    notice = json.dumps({
+        "truncation_warning": (
+            f"Response was {len(text)} chars and has been truncated to "
+            f"{MAX_GENE_CHARS} chars. Use more specific queries or filters "
+            "to reduce the response size."
+        ),
+    })
+    budget = MAX_GENE_CHARS - len(notice) - 5
+    return text[:max(budget, 200)] + "\n..." + notice
+
+
 # ----- Resources -----
 
 
@@ -66,7 +84,7 @@ def resource_gene(gene_id: str) -> str:
     """Gene information including genomic locations and functional annotations."""
     try:
         data = _client().gene_by_id(int(gene_id))
-        return _json_text(data)
+        return _truncate_gene_output(_json_text(data))
     except (ValueError, NCBIError) as e:
         return _json_text({"error": str(e), "gene_id": gene_id})
 
@@ -188,10 +206,11 @@ def search_genes(
     organism: str | None = None,
     tax_id: int | None = None,
     chromosome: str | None = None,
-    max_results: int = 50,
+    max_results: int = 20,
     page_token: str | None = None,
 ) -> str:
-    """Search genes by symbol, organism/tax_id, or chromosome. Provide at least one of gene_symbol, gene_id, organism, or tax_id."""
+    """Search genes by symbol, organism/tax_id, or chromosome. Provide at least one of gene_symbol, gene_id, organism, or tax_id.
+    For primer target scouting, prefer the search_gene_coordinates tool which returns compact coordinate-only results."""
     if not any([gene_symbol, gene_id is not None, organism, tax_id is not None]):
         return _json_text({"error": "Provide at least one of: gene_symbol, gene_id, organism, tax_id"})
     max_results = min(max(1, max_results), 1000)
@@ -204,16 +223,19 @@ def search_genes(
             page_token=page_token,
             chromosome=chromosome,
         )
-        genes = data.get("genes", [])
+        reports = data.get("reports", data.get("genes", []))
         if gene_id is not None and not gene_symbol:
-            genes = [g for g in genes if g.get("gene_id") == gene_id]
+            reports = [
+                r for r in reports
+                if str((r.get("gene") or r).get("gene_id", "")) == str(gene_id)
+            ]
         out = {
-            "total_count": data.get("total_count", len(genes)),
-            "returned_count": len(genes),
+            "total_count": data.get("total_count", len(reports)),
+            "returned_count": len(reports),
             "next_page_token": data.get("next_page_token"),
-            "genes": genes,
+            "genes": reports,
         }
-        return _json_text(out)
+        return _truncate_gene_output(_json_text(out))
     except NCBIError as e:
         return _json_text({"error": str(e)})
 
@@ -230,21 +252,22 @@ def get_gene_info(
         try:
             content = "COMPLETE" if include_sequences else "SUMMARY"
             data = _client().gene_by_id(gene_id, returned_content=content)
-            return _json_text(data)
+            return _truncate_gene_output(_json_text(data))
         except NCBIError as e:
             return _json_text({"error": str(e)})
     if gene_symbol and organism:
         try:
             search_data = _client().gene_search(symbol=gene_symbol, taxon=organism, limit=1)
-            genes = search_data.get("genes", [])
-            if not genes:
+            reports = search_data.get("reports", search_data.get("genes", []))
+            if not reports:
                 return _json_text({"error": f"Gene {gene_symbol} not found in {organism}"})
-            gid = genes[0].get("gene_id")
+            gene_obj = reports[0].get("gene") or reports[0]
+            gid = gene_obj.get("gene_id")
             if not gid:
                 return _json_text({"error": "No gene_id in search result"})
             content = "COMPLETE" if include_sequences else "SUMMARY"
-            data = _client().gene_by_id(gid, returned_content=content)
-            return _json_text(data)
+            data = _client().gene_by_id(int(gid), returned_content=content)
+            return _truncate_gene_output(_json_text(data))
         except NCBIError as e:
             return _json_text({"error": str(e)})
     return _json_text({"error": "Provide either gene_id or (gene_symbol and organism)"})
@@ -260,9 +283,188 @@ def get_gene_sequences(
         content = "COMPLETE"
         data = _client().gene_by_id(gene_id, returned_content=content)
         out = {"gene_id": gene_id, "sequence_type": sequence_type or "all", "sequences": data}
-        return _json_text(out)
+        return _truncate_gene_output(_json_text(out))
     except NCBIError as e:
         return _json_text({"error": str(e)})
+
+
+# ----- Primer scout helper -----
+
+
+def _extract_gene_coords(reports: list[dict]) -> list[dict]:
+    """Distill full gene records down to just the fields needed for primer target selection.
+
+    Handles the NCBI Datasets v2 response structure:
+      reports[].gene.annotations[].genomic_locations[].genomic_accession_version
+      reports[].gene.annotations[].genomic_locations[].genomic_range.{begin, end, orientation}
+    """
+    results: list[dict] = []
+    for report in reports:
+        gene_info = report.get("gene") or report
+        annotations = gene_info.get("annotations") or []
+        for ann in annotations:
+            for loc in ann.get("genomic_locations") or []:
+                accession = loc.get("genomic_accession_version", "")
+                gr = loc.get("genomic_range") or {}
+                raw_begin = gr.get("begin")
+                raw_end = gr.get("end")
+                if raw_begin is None or raw_end is None:
+                    continue
+                begin = int(raw_begin)
+                end = int(raw_end)
+                results.append({
+                    "gene_id": gene_info.get("gene_id"),
+                    "symbol": gene_info.get("symbol", ""),
+                    "description": (gene_info.get("description") or "").split(";")[0],
+                    "organism": gene_info.get("taxname", ""),
+                    "tax_id": gene_info.get("tax_id"),
+                    "accession": accession,
+                    "seq_start": begin,
+                    "seq_stop": end,
+                    "orientation": gr.get("orientation", ""),
+                    "length": abs(end - begin) + 1,
+                })
+    return results
+
+
+@mcp.tool()
+def search_gene_coordinates(
+    gene_symbol: str | None = None,
+    organism: str | None = None,
+    tax_id: int | None = None,
+    max_results: int = 10,
+) -> str:
+    """Search genes and return ONLY accession + genomic coordinates — optimised for
+    primer target scouting.  Returns compact results that won't be truncated.
+    Provide at least gene_symbol or organism/tax_id."""
+    if not any([gene_symbol, organism, tax_id is not None]):
+        return _json_text({"error": "Provide at least one of: gene_symbol, organism, tax_id"})
+    max_results = min(max(1, max_results), 100)
+    try:
+        taxon = str(tax_id) if tax_id is not None else organism
+        data = _client().gene_search(
+            symbol=gene_symbol,
+            taxon=taxon,
+            limit=max_results,
+        )
+        reports = data.get("reports", data.get("genes", []))
+        coords = _extract_gene_coords(reports)
+        return _json_text({
+            "total_count": data.get("total_count", len(reports)),
+            "returned": len(coords),
+            "coordinates": coords,
+        })
+    except NCBIError as e:
+        return _json_text({"error": str(e)})
+
+
+# ----- Efetch tools (raw FASTA sequences) -----
+
+
+MAX_FASTA_BP = 3000
+
+
+def _parse_fasta_sequence(fasta_text: str) -> tuple[str, str]:
+    """Split FASTA text into (header_line, sequence_only). Strips whitespace."""
+    lines = fasta_text.strip().splitlines()
+    header = ""
+    seq_lines: list[str] = []
+    for line in lines:
+        if line.startswith(">"):
+            header = line
+        else:
+            seq_lines.append(line.strip())
+    return header, "".join(seq_lines)
+
+
+@mcp.tool()
+def fetch_nucleotide_fasta(
+    accession: str,
+    seq_start: int | None = None,
+    seq_stop: int | None = None,
+) -> str:
+    """Fetch the raw FASTA nucleotide sequence for an accession (e.g. NM_000546.6,
+    NC_000017.11, NZ_CP007799.1). Returns the FASTA text (header + ATGC sequence).
+    Optionally specify seq_start/seq_stop (1-based) to retrieve a subsequence.
+    Sequences longer than 3000 bp are truncated to the first 3000 bp with a warning;
+    use seq_start/seq_stop to target a specific region instead."""
+    try:
+        raw = _client().efetch_fasta(
+            accession,
+            db="nucleotide",
+            seq_start=seq_start,
+            seq_stop=seq_stop,
+        )
+        header, seq = _parse_fasta_sequence(raw)
+        if len(seq) > MAX_FASTA_BP:
+            truncated = seq[:MAX_FASTA_BP]
+            return _json_text({
+                "warning": (
+                    f"Sequence is {len(seq)} bp which exceeds the {MAX_FASTA_BP} bp limit. "
+                    f"Truncated to the first {MAX_FASTA_BP} bp. "
+                    "Use seq_start and seq_stop to target the specific gene region you need."
+                ),
+                "accession": accession,
+                "original_length": len(seq),
+                "returned_length": MAX_FASTA_BP,
+                "header": header,
+                "sequence": truncated,
+            })
+        return _json_text({
+            "accession": accession,
+            "length": len(seq),
+            "header": header,
+            "sequence": seq,
+        })
+    except NCBIError as e:
+        return _json_text({"error": str(e), "accession": accession})
+
+
+@mcp.tool()
+def fetch_multiple_fasta(
+    accessions: list[str],
+) -> str:
+    """Fetch raw FASTA nucleotide sequences for multiple accessions in one request
+    (max 50). Each sequence longer than 3000 bp is truncated with a warning.
+    Returns a JSON array of results."""
+    if len(accessions) > 50:
+        return _json_text({"error": "Maximum 50 accessions per batch"})
+    try:
+        raw = _client().efetch_batch_fasta(accessions, db="nucleotide")
+    except (ValueError, NCBIError) as e:
+        return _json_text({"error": str(e)})
+
+    entries: list[dict] = []
+    current_header = ""
+    current_lines: list[str] = []
+
+    def _flush() -> None:
+        if not current_header and not current_lines:
+            return
+        seq = "".join(current_lines)
+        entry: dict = {"header": current_header, "length": len(seq)}
+        if len(seq) > MAX_FASTA_BP:
+            entry["warning"] = (
+                f"Sequence is {len(seq)} bp, truncated to {MAX_FASTA_BP} bp. "
+                "Use fetch_nucleotide_fasta with seq_start/seq_stop for a specific region."
+            )
+            entry["original_length"] = len(seq)
+            entry["returned_length"] = MAX_FASTA_BP
+            entry["sequence"] = seq[:MAX_FASTA_BP]
+        else:
+            entry["sequence"] = seq
+        entries.append(entry)
+
+    for line in raw.strip().splitlines():
+        if line.startswith(">"):
+            _flush()
+            current_header = line
+            current_lines = []
+        else:
+            current_lines.append(line.strip())
+    _flush()
+
+    return _json_text({"results": entries, "count": len(entries)})
 
 
 # ----- Taxonomy tools -----
