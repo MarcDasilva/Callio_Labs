@@ -12,7 +12,10 @@ import {
   IconCube3dSphere,
   IconTerminal,
   IconChevronRight,
+  IconDownload,
+  IconFileTypePdf,
 } from "@tabler/icons-react";
+import { isReportContent, downloadReportPdf } from "@/components/report-view";
 
 export interface AgentStep {
   type: "thinking" | "tool_call" | "tool_result" | "output";
@@ -80,6 +83,44 @@ function StepRow({ step }: { step: AgentStep }) {
   );
 }
 
+function ReportDownloadRow({ markdown }: { markdown: string }) {
+  const [busy, setBusy] = useState(false);
+  const title = markdown.split("\n")[0]?.replace(/^#+\s*/, "").trim() || "Report";
+
+  const handleClick = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await downloadReportPdf(markdown);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-3 px-4 py-3">
+      <IconFileTypePdf className="size-5 shrink-0 text-black/50" />
+      <div className="flex-1 min-w-0">
+        <p className="truncate text-sm font-medium text-black">{title}</p>
+        <p className="text-[11px] text-black/40">PDF report ready</p>
+      </div>
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={busy}
+        className="shrink-0 rounded p-1.5 text-black transition-opacity hover:opacity-70 disabled:opacity-50"
+        aria-label="Download PDF"
+      >
+        {busy ? (
+          <IconLoader2 className="size-5 animate-spin" />
+        ) : (
+          <IconDownload className="size-5" />
+        )}
+      </button>
+    </div>
+  );
+}
+
 export function ChatbotPanel({
   onSend,
   messages,
@@ -90,12 +131,20 @@ export function ChatbotPanel({
   modelViewContent,
 }: ChatbotPanelProps) {
   const [input, setInput] = useState("");
+  const [showModelViewButton, setShowModelViewButton] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const el = scrollRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages, isLoading]);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -104,12 +153,18 @@ export function ChatbotPanel({
     setInput("");
     onSend?.();
     onNewMessage(text);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setShowModelViewButton(true), 3000);
   };
 
   const hasContent = messages.length > 0 || isLoading;
 
   return (
-    <aside className="w-full max-w-2xl px-4 flex flex-col gap-2">
+    <aside
+      className={`w-full max-w-2xl px-4 flex flex-col transition-[gap] duration-300 ${
+        showModelViewButton ? "gap-4" : "gap-1"
+      }`}
+    >
       <GlassSurface
         width={"100%" as unknown as number}
         height={320}
@@ -152,14 +207,18 @@ export function ChatbotPanel({
                     )}
 
                     {msg.content ? (
-                      <div className="px-4 py-3">
-                        <div className="text-sm leading-relaxed text-black whitespace-pre-wrap wrap-break-word">
-                          {msg.content}
-                          {isLoading && msg.id === messages[messages.length - 1]?.id && (
-                            <span className="inline-block w-1.5 h-4 ml-0.5 bg-black/40 animate-pulse rounded-sm align-text-bottom" />
-                          )}
+                      isReportContent(msg.content) ? (
+                        <ReportDownloadRow markdown={msg.content} />
+                      ) : (
+                        <div className="px-4 py-3">
+                          <div className="text-sm leading-relaxed text-black whitespace-pre-wrap wrap-break-word">
+                            {msg.content}
+                            {isLoading && msg.id === messages[messages.length - 1]?.id && (
+                              <span className="inline-block w-1.5 h-4 ml-0.5 bg-black/40 animate-pulse rounded-sm align-text-bottom" />
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      )
                     ) : null}
                   </div>
                 )}
@@ -179,7 +238,13 @@ export function ChatbotPanel({
       </GlassSurface>
 
       {onToggleModelView && (
-        <div className="flex justify-center">
+        <div
+          className={`flex justify-center overflow-hidden transition-all duration-300 ease-out ${
+            showModelViewButton
+              ? "max-h-16 opacity-100"
+              : "max-h-0 opacity-0"
+          }`}
+        >
           <button
             type="button"
             onClick={onToggleModelView}

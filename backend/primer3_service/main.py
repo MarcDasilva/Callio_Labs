@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Primer3 Design Service",
     version="0.1.0",
-    description="Accepts up to 3 DNA sequences, returns 3 primer pairs per sequence (9 total) with full primer3-py statistics.",
+    description="Accepts up to 3 DNA sequences, returns 4 primer pairs per sequence with full primer3-py statistics.",
 )
 
 

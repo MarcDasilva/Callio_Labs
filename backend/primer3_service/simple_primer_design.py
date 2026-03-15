@@ -13,7 +13,7 @@ from typing import Any
 PRIMER_LEN = 20
 PRODUCT_MIN = 80
 PRODUCT_MAX = 400
-NUM_RETURN = 3
+NUM_RETURN = 4
 
 COMPLEMENT = str.maketrans("ACGTacgt", "TGCAtgca")
 
@@ -94,28 +94,43 @@ def design_primers(
     if target_len < 10:
         return _empty_result(sequence_id)
 
-    # We want product size in [product_min, product_max]. Product = (right_3' - left_5' + 1).
-    # Forward primer 5' at left_5', reverse primer 3' at right_3' (on template).
-    # So left_5' can be at target_start (or a bit left), right_3' at target_end-1 or more.
+    # Generate primer pairs that span the target region, spread across it to fill gaps.
     product_opt = min(product_max, max(product_min, target_len + 40))
     pairs: list[dict[str, Any]] = []
+    used_positions: set[tuple[int, int]] = set()
+
+    # Strategy: place 4 pairs at different offsets across the available region.
+    # Pair 0: starts right at target_start (canonical placement)
+    # Pair 1: shifted upstream if possible
+    # Pair 2: shifted downstream if possible
+    # Pair 3: larger product spanning more of the target
+    offsets = [0, -primer_len, primer_len // 2, -primer_len // 2]
+    sizes = [
+        product_opt,
+        max(product_min, product_opt - 30),
+        min(product_max, product_opt + 30),
+        min(product_max, product_opt + 60),
+    ]
 
     for i in range(num_return):
-        # Vary product size slightly for multiple suggestions
-        size = product_opt + (i - num_return // 2) * 20
-        size = max(product_min, min(product_max, size))
-        # Left primer 5' position; right primer 3' position = left_5' + size - 1
-        left_5 = max(0, target_start)
+        offset = offsets[i] if i < len(offsets) else (i - num_return // 2) * 20
+        size = sizes[i] if i < len(sizes) else product_opt
+
+        left_5 = max(0, target_start + offset)
         right_3 = left_5 + size - 1
         if right_3 >= L:
             right_3 = L - 1
-            left_5 = right_3 - size + 1
-            if left_5 < 0:
-                left_5 = 0
-                right_3 = min(left_5 + size - 1, L - 1)
-        # Forward: from left_5, length primer_len
+            left_5 = max(0, right_3 - size + 1)
+            right_3 = min(left_5 + size - 1, L - 1)
+
+        pos_key = (left_5, right_3)
+        if pos_key in used_positions:
+            left_5 = max(0, left_5 + i * 5)
+            right_3 = min(L - 1, left_5 + size - 1)
+            pos_key = (left_5, right_3)
+        used_positions.add(pos_key)
+
         fwd_seq = seq[left_5 : left_5 + primer_len]
-        # Reverse: 3' on template at right_3, so reverse primer binds template[right_3 - primer_len + 1 : right_3 + 1], revcomp
         rev_start = right_3 - primer_len + 1
         if rev_start < 0:
             rev_start = 0
@@ -152,6 +167,38 @@ def design_primers(
             "compl_any": _compl_any_score(fwd_seq, rev_seq),
             "compl_end": _compl_end_score(fwd_seq, rev_seq),
             "product_tm": (left_tm + right_tm) / 2.0,
+        })
+
+    # Guarantee exactly num_return pairs by filling gaps with shifted variants
+    fill_attempt = 0
+    while len(pairs) < num_return and fill_attempt < num_return * 3:
+        fill_attempt += 1
+        shift = fill_attempt * 10
+        left_5 = max(0, target_start + shift)
+        size = max(product_min, product_opt - fill_attempt * 10)
+        right_3 = min(L - 1, left_5 + size - 1)
+        if right_3 - left_5 + 1 < product_min:
+            continue
+        fwd_seq = seq[left_5 : left_5 + primer_len]
+        rev_start = max(0, right_3 - primer_len + 1)
+        rev_seq = revcomp(seq[rev_start : right_3 + 1])
+        if len(fwd_seq) < 16 or len(rev_seq) < 16:
+            continue
+        product_size = right_3 - left_5 + 1
+        pairs.append({
+            "left_start": left_5, "left_len": len(fwd_seq),
+            "right_start": rev_start, "right_len": len(rev_seq),
+            "left_seq": fwd_seq, "right_seq": rev_seq,
+            "product_size": product_size,
+            "left_tm": simple_tm(fwd_seq), "right_tm": simple_tm(rev_seq),
+            "left_gc": gc_content(fwd_seq), "right_gc": gc_content(rev_seq),
+            "left_penalty": 0.0, "right_penalty": 0.0, "pair_penalty": 0.0,
+            "left_self_any": 0.0, "right_self_any": 0.0,
+            "left_self_end": 0.0, "right_self_end": 0.0,
+            "left_end_stability": _end_stability(fwd_seq),
+            "right_end_stability": _end_stability(rev_seq),
+            "compl_any": 0.0, "compl_end": 0.0,
+            "product_tm": (simple_tm(fwd_seq) + simple_tm(rev_seq)) / 2.0,
         })
 
     return _boulder_result(sequence_id, seq, pairs)

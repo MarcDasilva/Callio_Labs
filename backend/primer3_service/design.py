@@ -59,6 +59,16 @@ def get_sample_design_response() -> SimplifiedDesignResponse:
                         affinity_to_target=1.0,
                         product_size_bp=198,
                     ),
+                    PrimerPairSummary(
+                        forward_primer="TACGATCGATCGTAGCTAGCA",
+                        reverse_primer="TGCTAGCTAGCGATCGATCGT",
+                        left_tm=58.5,
+                        right_tm=59.9,
+                        left_gc_percent=47.6,
+                        right_gc_percent=52.4,
+                        affinity_to_target=1.0,
+                        product_size_bp=230,
+                    ),
                 ],
             ),
         ],
@@ -79,7 +89,7 @@ logger = logging.getLogger(__name__)
 
 # Default global args: looser for demo; wider than strict defaults but not extreme (keeps runtime reasonable).
 DEFAULT_GLOBAL_ARGS: dict[str, Any] = {
-    "PRIMER_NUM_RETURN": 3,
+    "PRIMER_NUM_RETURN": 4,
     "PRIMER_PRODUCT_SIZE_RANGE": [[80, 600]],
     "PRIMER_OPT_SIZE": 22,
     "PRIMER_MIN_SIZE": 14,
@@ -93,9 +103,9 @@ DEFAULT_GLOBAL_ARGS: dict[str, Any] = {
 
 
 def _build_global_args(global_args: dict[str, Any]) -> dict[str, Any]:
-    """Merge request global_args with defaults; ensure PRIMER_NUM_RETURN=3."""
+    """Merge request global_args with defaults; ensure PRIMER_NUM_RETURN=4."""
     merged = {**DEFAULT_GLOBAL_ARGS, **global_args}
-    merged["PRIMER_NUM_RETURN"] = 3
+    merged["PRIMER_NUM_RETURN"] = 4
     return merged
 
 

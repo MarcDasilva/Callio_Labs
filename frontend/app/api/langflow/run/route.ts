@@ -8,7 +8,7 @@ const LANGFLOW_BASE_URL = (
 
 const LANGFLOW_FLOW_ID =
   process.env.LANGFLOW_FLOW_ID ||
-  "08d73657-70ad-479f-a7e7-823b1febfde7";
+  "9d638972-17ba-45e2-8d7b-a688d87c0f11";
 
 const LANGFLOW_API_KEY = process.env.LANGFLOW_API_KEY || "";
 

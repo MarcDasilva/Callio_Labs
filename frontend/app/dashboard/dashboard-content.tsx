@@ -161,7 +161,7 @@ export function DashboardContent() {
                         ...m,
                         content:
                           event.message || m.content || "No response received.",
-                        steps: steps.length > 0 ? steps : m.steps ?? [],
+                        steps: steps.length > 0 ? steps : (m.steps ?? []),
                       }
                     : m,
                 ),
@@ -212,7 +212,8 @@ export function DashboardContent() {
     [sessionId],
   );
 
-  const headerTitle = activePage === "projects" ? "Projects" : "Genome Analysis";
+  const headerTitle =
+    activePage === "projects" ? "Projects" : "Genome Analysis";
 
   return (
     <div className="relative h-screen w-full overflow-hidden">
@@ -258,7 +259,10 @@ export function DashboardContent() {
                 <div className="relative flex flex-1 min-h-0 flex-col items-center justify-center gap-4 px-4 pb-4">
                   {panelsOpen && (
                     <>
-                      <div className="absolute left-4 top-4 bottom-4 flex flex-col gap-4" style={{ width: "calc((100% - 42rem) / 2 - 2rem)" }}>
+                      <div
+                        className="absolute left-4 top-4 bottom-4 flex flex-col gap-4"
+                        style={{ width: "calc((100% - 42rem) / 2 - 2rem)" }}
+                      >
                         <div className="flex-1 min-h-0">
                           <GlassSurface
                             width={"100%" as unknown as number}
@@ -282,7 +286,10 @@ export function DashboardContent() {
                           </GlassSurface>
                         </div>
                       </div>
-                      <div className="absolute right-4 top-4 bottom-4 flex flex-col gap-4" style={{ width: "calc((100% - 42rem) / 2 - 2rem)" }}>
+                      <div
+                        className="absolute right-4 top-4 bottom-4 flex flex-col gap-4"
+                        style={{ width: "calc((100% - 42rem) / 2 - 2rem)" }}
+                      >
                         <div className="flex-1 min-h-0">
                           <GlassSurface
                             width={"100%" as unknown as number}
