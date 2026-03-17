@@ -1,6 +1,6 @@
 # Callio_Labs — Agentic Genome Research Platform
 
-Devpost https://devpost.com/software/callio-labs
+Devpost https://devpost.com/software/callio-labs  
 An AI-powered genomics research platform by **Callio Labs** that combines a multi-persona mutation research chatbot, DNA primer design, NCBI dataset integration, protein structure prediction, and a visual LangFlow agent — all behind a modern Next.js dashboard with 3D DNA visualization.
 
 ---
